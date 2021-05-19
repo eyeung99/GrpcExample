@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+option go_package = "example";
+
+package examplepb;
+
+service UserService {
+  rpc Login(User) returns (LoginResponse) {}
+}
+
+message User {
+  string username = 1;
+  string password = 2;
+  string address = 3;
+}
+
+message UserRequest {
+  User user = 1;
+}
+
+message LoginResponse {
+  bool success = 1;
+}
