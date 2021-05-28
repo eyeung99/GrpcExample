@@ -19,21 +19,21 @@ type UserServerI interface {
 	GetCounter () map[int32]int32
 }
 
-type ActualUserServer struct {
+type MemoryDB struct {
 	registry map[string]string
 	loggedIn map[string]bool
 	counter map[int32]int32
 }
 
-func (a ActualUserServer) GetRegistry() map[string]string {
+func (a MemoryDB) GetRegistry() map[string]string {
 	return a.registry
 }
 
-func (a ActualUserServer) GetUserStatus() map[string]bool {
+func (a MemoryDB) GetUserStatus() map[string]bool {
 	return a.loggedIn
 }
 
-func (a ActualUserServer) GetCounter() map[int32]int32 {
+func (a MemoryDB) GetCounter() map[int32]int32 {
 	return a.counter
 }
 
@@ -87,7 +87,11 @@ func main() {
 	}
 
 	selfDefinedServer := &UserServer{
-		UserServerI: ActualUserServer{},
+		UserServerI: MemoryDB{
+			registry: make(map[string]string),
+			loggedIn: make(map[string]bool),
+			counter:  make(map[int32]int32),
+		},
 	}
 
 	// Started server
