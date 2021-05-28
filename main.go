@@ -13,17 +13,39 @@ import (
 	"time"
 )
 
-type UserServer struct {
-	mu sync.Mutex
+type UserServerI interface {
+	GetRegistry () map[string]string
+	GetUserStatus () map[string]bool
+	GetCounter () map[int32]int32
+}
+
+type ActualUserServer struct {
 	registry map[string]string
 	loggedIn map[string]bool
 	counter map[int32]int32
 }
 
+func (a ActualUserServer) GetRegistry() map[string]string {
+	return a.registry
+}
+
+func (a ActualUserServer) GetUserStatus() map[string]bool {
+	return a.loggedIn
+}
+
+func (a ActualUserServer) GetCounter() map[int32]int32 {
+	return a.counter
+}
+
+type UserServer struct {
+	mu sync.Mutex
+	UserServerI
+}
+
 func (U *UserServer)Register(ctx context.Context, user *example.RegisterRequest) (*example.RegisterResponse, error){
 	U.mu.Lock()
 	defer U.mu.Unlock()
-	U.registry[user.Username] = user.Password
+	U.GetRegistry()[user.Username] = user.Password
 	fmt.Println(user," has been registered")
 	return &example.RegisterResponse{Success:true}, nil
 }
@@ -31,18 +53,18 @@ func (U *UserServer)Register(ctx context.Context, user *example.RegisterRequest)
 func (U *UserServer)Login(ctx context.Context, user *example.LoginRequest) (*example.LoginResponse, error){
 	U.mu.Lock()
 	defer U.mu.Unlock()
-	if _, ok := U.registry[user.Username]; ok{
-		U.loggedIn[user.Username] = true
+	if _, ok := U.GetRegistry()[user.Username]; ok{
+		U.GetUserStatus()[user.Username] = true
 	}
 
-	return &example.LoginResponse{Success:U.loggedIn[user.Username]},nil
+	return &example.LoginResponse{Success:U.GetUserStatus()[user.Username]},nil
 }
 
 func (U *UserServer) DoAction(ctx context.Context, in *example.DoActionRequest) (*example.DoActionResponse, error) {
 	U.mu.Lock()
 	defer U.mu.Unlock()
-	if U.loggedIn[in.Username] {
-		U.counter[in.Counter] += in.Number
+	if U.GetUserStatus()[in.Username] {
+		U.GetCounter()[in.Counter] += in.Number
 	}
 	return &example.DoActionResponse{}, nil
 }
@@ -65,9 +87,7 @@ func main() {
 	}
 
 	selfDefinedServer := &UserServer{
-		registry: make(map[string]string),
-		loggedIn: make(map[string]bool),
-		counter: make(map[int32]int32),
+		UserServerI: ActualUserServer{},
 	}
 
 	// Started server
