@@ -1,0 +1,22 @@
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+name: 'Check code formatting using gofmt'
+
+description: 'Check code formatting using gofmt'
+inputs:
+  gofmt-path:
+    description: 'Path used by gofmt command'
+    required: false
+    default: './'
+  gofmt-flags:
+    description: "Flags to pass to gofmt, e.g. -d or -l"
+    required: false
+    default: '-l'
+outputs:
+  gofmt-output:
+    description: 'The gofmt output if the command fail'
